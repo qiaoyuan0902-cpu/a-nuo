@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测测你是哪种「常熟阿诺」？</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red: #ff2d2d;
+      --bg: #000;
+      --card: #0d0d0d;
+      --border: #2a2a2a;
+      --text: #fff;
+      --muted: #888;
+      --dim: #444;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 0 0 60px;
+    }
+    .container { width: 100%; max-width: 480px; padding: 0 16px; }
+    .page { display: none; opacity: 0; transform: translateY(24px); transition: opacity 0.35s ease, transform 0.35s ease; }
+    .page.active { display: block; }
+    .page.visible { opacity: 1; transform: translateY(0); }
+
+    /* WELCOME */
+    .welcome-hero { padding-top: 48px; margin-bottom: 28px; text-align: center; }
+    .hero-icon { width: 72px; height: 72px; margin: 0 auto 24px; }
+    .welcome-eyebrow { font-size: 11px; letter-spacing: 4px; color: var(--red); text-transform: uppercase; margin-bottom: 14px; }
+    .welcome-title { font-size: 34px; font-weight: 900; line-height: 1.2; margin-bottom: 14px; }
+    .welcome-title em { font-style: normal; color: var(--red); }
+    .welcome-sub { font-size: 14px; color: var(--muted); line-height: 1.75; }
+    .welcome-stats { display: flex; justify-content: space-around; margin: 28px 0; padding: 20px 16px; border: 1px solid var(--border); background: var(--card); }
+    .stat-item { text-align: center; }
+    .stat-num { font-size: 26px; font-weight: 900; color: var(--red); display: block; line-height: 1; }
+    .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; display: block; }
+    .welcome-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; justify-content: center; }
+    .tag { border: 1px solid var(--border); padding: 5px 12px; font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+
+    /* BUTTONS */
+    .btn { display: block; width: 100%; padding: 18px 16px; background: var(--bg); color: var(--text); border: 2px solid var(--text); font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; text-align: center; transition: background 0.15s, color 0.15s, transform 0.1s; letter-spacing: 2px; }
+    .btn:hover { background: var(--text); color: var(--bg); }
+    .btn:active { transform: scale(0.98); }
+    .btn-red { border-color: var(--red); color: var(--red); }
+    .btn-red:hover { background: var(--red); color: var(--bg); }
+
+    /* QUIZ */
+    .quiz-header { padding-top: 36px; margin-bottom: 20px; }
+    .progress-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .progress-label-txt { font-size: 10px; color: var(--muted); letter-spacing: 3px; }
+    .progress-pct { font-size: 13px; font-weight: 700; color: var(--red); }
+    .progress-bar-bg { width: 100%; height: 5px; background: #1a1a1a; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: var(--red); transition: width 0.5s cubic-bezier(0.4,0,0.2,1); width: 0%; }
+    .question-card { background: var(--card); border: 1px solid var(--border); padding: 26px 22px; margin-bottom: 14px; }
+    .question-num { font-size: 10px; color: var(--dim); letter-spacing: 3px; margin-bottom: 10px; }
+    .question-text { font-size: 21px; font-weight: 800; line-height: 1.45; }
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    .opt-btn { display: flex; align-items: flex-start; gap: 14px; width: 100%; padding: 15px 16px; background: var(--card); color: var(--text); border: 1px solid var(--border); font-size: 14px; font-family: inherit; cursor: pointer; text-align: left; transition: border-color 0.15s, background 0.15s; line-height: 1.5; }
+    .opt-btn:hover:not(.disabled) { border-color: #555; }
+    .opt-btn.selected { border-color: var(--red); background: #130000; }
+    .opt-btn.disabled { cursor: not-allowed; }
+    .opt-badge { min-width: 22px; height: 22px; border: 1.5px solid var(--red); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--red); flex-shrink: 0; margin-top: 1px; transition: background 0.15s, color 0.15s; }
+    .opt-btn.selected .opt-badge { background: var(--red); color: #000; }
+    .opt-text { flex: 1; }
+
+    /* RESULT */
+    .result-page { padding-top: 36px; }
+    .result-eyebrow { font-size: 10px; color: var(--red); letter-spacing: 4px; margin-bottom: 6px; }
+    .persona-img-outer { margin: 20px auto 24px; text-align: center; }
+    .persona-img-wrap { width: 180px; height: 216px; margin: 0 auto; border: 2px solid var(--border); overflow: hidden; background: #080808; display: block; position: relative; }
+    .persona-img-wrap::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 36px; background: linear-gradient(to top, #080808, transparent); pointer-events: none; }
+    .persona-img-wrap svg { width: 100%; height: 100%; display: block; }
+    .persona-type-row { text-align: center; margin-top: 10px; }
+    .type-badge { display: inline-block; border: 1px solid var(--red); color: var(--red); font-size: 10px; padding: 3px 12px; letter-spacing: 2px; }
+    .result-name { font-size: 40px; font-weight: 900; margin: 14px 0 10px; line-height: 1.05; text-align: center; }
+    .result-quote { font-size: 14px; color: var(--red); margin-bottom: 18px; padding: 12px 16px; border-left: 3px solid var(--red); background: #0d0000; line-height: 1.6; }
+    .result-desc { font-size: 14px; color: #bbb; line-height: 1.9; margin-bottom: 28px; }
+    .section-label { font-size: 10px; color: var(--muted); letter-spacing: 3px; margin-bottom: 16px; }
+    .radar-wrap { width: 200px; height: 200px; margin: 0 auto 28px; }
+    .score-bars { margin-bottom: 28px; }
+    .score-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .score-dim { font-size: 12px; color: var(--muted); width: 36px; flex-shrink: 0; }
+    .score-bar-bg { flex: 1; height: 3px; background: #1a1a1a; }
+    .score-bar-fill { height: 3px; background: var(--red); transition: width 0.9s cubic-bezier(0.4,0,0.2,1); width: 0%; }
+    .score-val { font-size: 12px; color: var(--dim); width: 24px; text-align: right; flex-shrink: 0; }
+    .divider { border: none; border-top: 1px solid #1a1a1a; margin: 24px 0; }
+    .share-card { border: 1px solid var(--border); padding: 22px 20px; margin-bottom: 14px; background: var(--card); position: relative; }
+    .share-card-label { position: absolute; top: -8px; left: 14px; background: var(--card); padding: 0 8px; font-size: 10px; color: var(--muted); letter-spacing: 2px; }
+    .share-main { font-size: 15px; font-weight: 700; line-height: 1.7; margin-bottom: 8px; }
+    .share-main strong { color: var(--red); }
+    .share-quote-text { font-size: 13px; color: var(--muted); font-style: italic; margin-bottom: 14px; }
+    .share-slogan { font-size: 12px; color: var(--dim); border-top: 1px solid #1a1a1a; padding-top: 12px; letter-spacing: 1px; }
+    .btn-group { display: flex; flex-direction: column; gap: 10px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <section id="welcome" class="page">
+    <div class="welcome-hero">
+      <div class="hero-icon">
+        <svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+          <rect width="72" height="72" fill="#000"/>
+          <rect x="4" y="24" width="10" height="24" fill="none" stroke="#ff2d2d" stroke-width="2"/>
+          <rect x="14" y="28" width="8" height="16" fill="none" stroke="#fff" stroke-width="2"/>
+          <rect x="22" y="32" width="28" height="8" fill="#fff"/>
+          <rect x="50" y="28" width="8" height="16" fill="none" stroke="#fff" stroke-width="2"/>
+          <rect x="58" y="24" width="10" height="24" fill="none" stroke="#ff2d2d" stroke-width="2"/>
+        </svg>
+      </div>
+      <p class="welcome-eyebrow">常熟特供 · 2024</p>
+      <h1 class="welcome-title">你是哪种<br><em>「常熟阿诺」</em>？</h1>
+      <p class="welcome-sub">25 道题，测出你的阿诺人格<br>暴躁？诺化？还是废柴？不服来辩！</p>
+    </div>
+    <div class="welcome-stats">
+      <div class="stat-item"><span class="stat-num" id="user-count">--</span><span class="stat-label">人已测试</span></div>
+      <div class="stat-item"><span class="stat-num">12</span><span class="stat-label">种人格</span></div>
+      <div class="stat-item"><span class="stat-num">25</span><span class="stat-label">道题目</span></div>
+    </div>
+    <div class="welcome-tags">
+      <span class="tag">不服就干</span><span class="tag">细狗鉴定</span>
+      <span class="tag">氮泵起飞</span><span class="tag">头尖哲学</span>
+    </div>
+    <button class="btn btn-red" onclick="startQuiz()">开始测试 →</button>
+  </section>
+
+  <section id="quiz" class="page">
+    <div class="quiz-header">
+      <div class="progress-meta">
+        <span class="progress-label-txt">诺化进度</span>
+        <span class="progress-pct" id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+    </div>
+    <div class="question-card">
+      <p class="question-num" id="q-num">Q01 / 25</p>
+      <p class="question-text" id="q-text"></p>
+    </div>
+    <div class="options" id="q-opts"></div>
+  </section>
+
+  <section id="result" class="page result-page">
+    <p class="result-eyebrow">▶ 测试结果</p>
+    <div class="persona-img-outer">
+      <div class="persona-img-wrap" id="persona-img"></div>
+      <div class="persona-type-row"><span class="type-badge" id="res-type"></span></div>
+    </div>
+    <h2 class="result-name" id="res-name"></h2>
+    <p class="result-quote" id="res-quote"></p>
+    <p class="result-desc" id="res-desc"></p>
+    <p class="section-label">— 三维评估 —</p>
+    <div class="radar-wrap" id="radar-wrap"></div>
+    <div class="score-bars">
+      <div class="score-row"><span class="score-dim">暴躁</span><div class="score-bar-bg"><div class="score-bar-fill" id="bar-0"></div></div><span class="score-val" id="val-0"></span></div>
+      <div class="score-row"><span class="score-dim">诺化</span><div class="score-bar-bg"><div class="score-bar-fill" id="bar-1"></div></div><span class="score-val" id="val-1"></span></div>
+      <div class="score-row"><span class="score-dim">废柴</span><div class="score-bar-bg"><div class="score-bar-fill" id="bar-2"></div></div><span class="score-val" id="val-2"></span></div>
+    </div>
+    <hr class="divider">
+    <div class="share-card">
+      <span class="share-card-label">分享给细狗们</span>
+      <div class="share-main" id="share-main"></div>
+      <div class="share-quote-text" id="share-quote-text"></div>
+      <p class="share-slogan">不服来辩！细狗！</p>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-red" id="copy-btn" onclick="copyShare()">复制分享文案</button>
+      <button class="btn" onclick="restartQuiz()">再测一次</button>
+    </div>
+  </section>
+
+</div>
+<script>
+/* ===== SVG PERSONALITY ILLUSTRATIONS ===== */
+const svgs = {
+
+"常熟战神": '<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="240" fill="#080808"/><text x="28" y="44" fill="#ff2d2d" font-size="16" font-weight="bold">#</text><text x="155" y="40" fill="#ff2d2d" font-size="20" font-weight="bold">!</text><path d="M100 16 L70 48 Q68 84 100 90 Q132 84 130 48 Z" fill="#111" stroke="#fff" stroke-width="2.5"/><line x1="78" y1="57" x2="93" y2="64" stroke="#ff2d2d" stroke-width="3" stroke-linecap="round"/><line x1="122" y1="57" x2="107" y2="64" stroke="#ff2d2d" stroke-width="3" stroke-linecap="round"/><circle cx="88" cy="68" r="4.5" fill="#fff"/><circle cx="112" cy="68" r="4.5" fill="#fff"/><circle cx="89" cy="69" r="2.5" fill="#000"/><circle cx="113" cy="69" r="2.5" fill="#000"/><path d="M85 84 L93 81 L100 83 L107 81 L115 84" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/><rect x="92" y="90" width="16" height="15" fill="#111" stroke="#fff" stroke-width="2"/><path d="M60 105 L140 105 L135 162 L65 162 Z" fill="#111" stroke="#fff" stroke-width="2.5"/><path d="M72 120 Q100 130 128 120" fill="none" stroke="#ff2d2d" stroke-width="2"/><line x1="100" y1="128" x2="100" y2="162" stroke="#2a2a2a" stroke-width="1.5"/><line x1="72" y1="138" x2="128" y2="138" stroke="#2a2a2a" stroke-width="1"/><line x1="72" y1="152" x2="128" y2="152" stroke="#2a2a2a" stroke-width="1"/><path d="M60 106 L34 90 L24 103 L50 122 L60 114 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M32 96 Q22 108 34 116" fill="none" stroke="#ff2d2d" stroke-width="2.5"/><path d="M24 103 L14 88 L28 82 L34 90" fill="#111" stroke="#fff" stroke-width="2"/><path d="M140 106 L166 90 L176 103 L150 122 L140 114 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M168 96 Q178 108 166 116" fill="none" stroke="#ff2d2d" stroke-width="2.5"/><path d="M176 103 L186 88 L172 82 L166 90" fill="#111" stroke="#fff" stroke-width="2"/><path d="M65 162 L76 204 L100 193 L124 204 L135 162 Z" fill="#ff2d2d"/><rect x="69" y="204" width="24" height="30" fill="#111" stroke="#fff" stroke-width="2"/><rect x="107" y="204" width="24" height="30" fill="#111" stroke="#fff" stroke-width="2"/><path d="M67 234 L93 234 L95 240 L65 240 Z" fill="#222" stroke="#fff" stroke-width="1.5"/><path d="M107 234 L131 234 L133 240 L105 240 Z" fill="#222" stroke="#fff" stroke-width="1.5"/></svg>',
+
+"氮泵战神": '<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="240" fill="#080808"/><circle cx="100" cy="58" r="48" fill="none" stroke="#ff2d2d" stroke-width="1" opacity="0.3" stroke-dasharray="5 4"/><circle cx="100" cy="58" r="30" fill="#111" stroke="#fff" stroke-width="2.5"/><circle cx="88" cy="54" r="7" fill="#ff2d2d" opacity="0.25"/><circle cx="112" cy="54" r="7" fill="#ff2d2d" opacity="0.25"/><circle cx="88" cy="54" r="5" fill="#ff2d2d"/><circle cx="112" cy="54" r="5" fill="#ff2d2d"/><circle cx="88" cy="54" r="2.5" fill="#fff"/><circle cx="112" cy="54" r="2.5" fill="#fff"/><path d="M86 70 Q100 79 114 70" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><rect x="91" y="88" width="18" height="13" fill="#111" stroke="#fff" stroke-width="2"/><path d="M66 101 L134 101 L130 160 L70 160 Z" fill="#111" stroke="#fff" stroke-width="2"/><line x1="74" y1="116" x2="66" y2="102" stroke="#ff2d2d" stroke-width="1.5" opacity="0.8"/><line x1="100" y1="95" x2="100" y2="80" stroke="#ff2d2d" stroke-width="2" opacity="0.8"/><line x1="126" y1="116" x2="134" y2="102" stroke="#ff2d2d" stroke-width="1.5" opacity="0.8"/><path d="M66 108 L44 145 L54 149 L74 118 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M134 106 L152 74 L162 80 L146 114 Z" fill="#111" stroke="#fff" stroke-width="2"/><rect x="155" y="38" width="19" height="40" rx="2" fill="#ff2d2d" stroke="#fff" stroke-width="1.5"/><rect x="158" y="44" width="13" height="5" fill="#fff" opacity="0.8"/><rect x="158" y="52" width="13" height="3" fill="#fff" opacity="0.5"/><text x="159" y="70" fill="#fff" font-size="8" font-weight="bold" font-family="monospace">N2</text><rect x="153" y="36" width="23" height="6" rx="1" fill="#ccc" stroke="#fff" stroke-width="1"/><path d="M70 160 L79 200 L100 190 L121 200 L130 160 Z" fill="#222" stroke="#fff" stroke-width="1.5"/><rect x="73" y="200" width="22" height="32" fill="#111" stroke="#fff" stroke-width="2"/><rect x="105" y="200" width="22" height="32" fill="#111" stroke="#fff" stroke-width="2"/><path d="M71 232 L95 232 L97 240 L69 240 Z" fill="#222" stroke="#fff" stroke-width="1.5"/><path d="M105 232 L127 232 L129 240 L103 240 Z" fill="#222" stroke="#fff" stroke-width="1.5"/></svg>',
+
+"道歉哥": '<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="240" fill="#080808"/><circle cx="86" cy="55" r="29" fill="#111" stroke="#fff" stroke-width="2.5"/><path d="M72 45 L87 53" stroke="#ff2d2d" stroke-width="3" stroke-linecap="round"/><path d="M102 53 L102 44" stroke="#ff2d2d" stroke-width="3" stroke-linecap="round"/><ellipse cx="78" cy="58" rx="5.5" ry="6" fill="#fff"/><ellipse cx="96" cy="58" rx="5.5" ry="6" fill="#fff"/><circle cx="80" cy="58" r="3" fill="#000"/><circle cx="98" cy="58" r="3" fill="#000"/><ellipse cx="86" cy="75" rx="15" ry="10" fill="#ff2d2d"/><path d="M72 70 Q86 84 100 70" fill="#ff2d2d" stroke="#fff" stroke-width="1.5"/><line x1="78" y1="70" x2="78" y2="77" stroke="#fff" stroke-width="2"/><line x1="86" y1="70" x2="86" y2="80" stroke="#fff" stroke-width="2"/><line x1="94" y1="70" x2="94" y2="77" stroke="#fff" stroke-width="2"/><text x="44" y="28" fill="#ff2d2d" font-size="12" font-weight="bold">道歉！</text><path d="M74 31 L78 42" stroke="#ff2d2d" stroke-width="1.5"/><rect x="78" y="84" width="16" height="15" fill="#111" stroke="#fff" stroke-width="2"/><path d="M54 100 L120 97 L118 156 L56 159 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M56 108 L35 150 L46 154 L66 118 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M118 100 L166 86 L170 97 L122 116 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M166 86 L180 80 L183 87 L170 97" fill="#111" stroke="#fff" stroke-width="2"/><path d="M178 80 L186 77 L188 84 L183 87" fill="#fff"/><path d="M56 159 L66 200 L87 189 L108 200 L118 159 Z" fill="#333" stroke="#fff" stroke-width="1.5"/><rect x="60" y="200" width="22" height="33" fill="#111" stroke="#fff" stroke-width="2"/><rect x="94" y="200" width="22" height="33" fill="#111" stroke="#fff" stroke-width="2"/><path d="M58 233 L82 233 L84 240 L56 240 Z" fill="#222" stroke="#fff" stroke-width="1.5"/><path d="M94 233 L116 233 L118 240 L92 240 Z" fill="#222" stroke="#fff" stroke-width="1.5"/></svg>',
+
+"尖头哲学家": '<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="240" fill="#080808"/><path d="M100 10 L67 52 L67 85 Q100 95 133 85 L133 52 Z" fill="#111" stroke="#fff" stroke-width="2.5"/><line x1="100" y1="10" x2="100" y2="28" stroke="#fff" stroke-width="2"/><line x1="88" y1="15" x2="96" y2="28" stroke="#fff" stroke-width="1.5" opacity="0.5"/><line x1="112" y1="15" x2="104" y2="28" stroke="#fff" stroke-width="1.5" opacity="0.5"/><circle cx="86" cy="62" r="5.5" fill="#fff"/><circle cx="86" cy="62" r="3" fill="#000"/><path d="M108 59 Q113 62 108 65" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><path d="M84 81 Q92 77 108 82" fill="none" stroke="#fff" stroke-width="2"/><rect x="91" y="95" width="18" height="13" fill="#111" stroke="#fff" stroke-width="2"/><path d="M68 108 L132 108 L128 162 L72 162 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M68 116 L48 157 L60 161 L78 126 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M132 112 L150 88 L158 94 L140 122 Z" fill="#111" stroke="#fff" stroke-width="2"/><circle cx="156" cy="92" r="9" fill="#111" stroke="#fff" stroke-width="2"/><line x1="154" y1="88" x2="140" y2="58" stroke="#ff2d2d" stroke-width="1.5" stroke-dasharray="3 3"/><text x="128" y="50" fill="#ff2d2d" font-size="24" font-weight="bold">?</text><text x="150" y="38" fill="#ff2d2d" font-size="16" font-weight="bold">?</text><path d="M72 162 L80 202 L100 191 L120 202 L128 162 Z" fill="#222" stroke="#fff" stroke-width="1.5"/><rect x="74" y="202" width="22" height="32" fill="#111" stroke="#fff" stroke-width="2"/><rect x="104" y="202" width="22" height="32" fill="#111" stroke="#fff" stroke-width="2"/><path d="M72 234 L96 234 L98 240 L70 240 Z" fill="#222" stroke="#fff" stroke-width="1.5"/><path d="M104 234 L126 234 L128 240 L102 240 Z" fill="#222" stroke="#fff" stroke-width="1.5"/></svg>',
+
+"DMS逻辑大师": '<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="240" fill="#080808"/><circle cx="100" cy="58" r="29" fill="#111" stroke="#fff" stroke-width="2.5"/><line x1="82" y1="50" x2="91" y2="59" stroke="#fff" stroke-width="2.5"/><line x1="91" y1="50" x2="82" y2="59" stroke="#fff" stroke-width="2.5"/><line x1="109" y1="50" x2="118" y2="59" stroke="#fff" stroke-width="2.5"/><line x1="118" y1="50" x2="109" y2="59" stroke="#fff" stroke-width="2.5"/><path d="M85 73 Q90 69 95 73 Q100 77 105 73 Q110 69 115 73" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/><rect x="91" y="87" width="18" height="14" fill="#111" stroke="#fff" stroke-width="2"/><path d="M66 101 L134 101 L130 160 L70 160 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M66 110 L36 70 L46 62 L76 105 Z" fill="#111" stroke="#fff" stroke-width="2"/><polygon points="36,70 28,58 38,52 46,62" fill="#fff"/><path d="M134 110 L168 152 L160 159 L122 120 Z" fill="#111" stroke="#fff" stroke-width="2"/><polygon points="168,152 175,162 165,166 160,159" fill="#fff"/><text x="16" y="52" fill="#ff2d2d" font-size="22" font-weight="bold">?</text><text x="158" y="46" fill="#ff2d2d" font-size="22" font-weight="bold">!</text><text x="34" y="28" fill="#ff2d2d" font-size="13" opacity="0.7">?!</text><text x="150" y="26" fill="#ff2d2d" font-size="13" opacity="0.7">!?</text><path d="M70 160 L78 200 L100 189 L122 200 L130 160 Z" fill="#333" stroke="#fff" stroke-width="1.5"/><rect x="72" y="200" width="22" height="32" fill="#111" stroke="#fff" stroke-width="2"/><rect x="106" y="200" width="22" height="32" fill="#111" stroke="#fff" stroke-width="2"/><path d="M70 232 L94 232 L96 240 L68 240 Z" fill="#222" stroke="#fff" stroke-width="1.5"/><path d="M106 232 L128 232 L130 240 L104 240 Z" fill="#222" stroke="#fff" stroke-width="1.5"/></svg>',
+
+"精神氮泵王": '<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="240" fill="#080808"/><circle cx="100" cy="56" r="47" fill="none" stroke="#ff2d2d" stroke-width="1" opacity="0.3" stroke-dasharray="4 4"/><path d="M58 26 L66 48 L57 51 L68 74" fill="none" stroke="#ff2d2d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M142 26 L134 48 L143 51 L132 74" fill="none" stroke="#ff2d2d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="76" y1="16" x2="80" y2="36" stroke="#ff2d2d" stroke-width="2" stroke-linecap="round"/><line x1="124" y1="16" x2="120" y2="36" stroke="#ff2d2d" stroke-width="2" stroke-linecap="round"/><circle cx="100" cy="56" r="30" fill="#111" stroke="#fff" stroke-width="2.5"/><circle cx="87" cy="51" r="10" fill="#fff"/><circle cx="113" cy="51" r="10" fill="#fff"/><circle cx="89" cy="51" r="7" fill="#ff2d2d"/><circle cx="115" cy="51" r="7" fill="#ff2d2d"/><circle cx="90" cy="49" r="3.5" fill="#000"/><circle cx="116" cy="49" r="3.5" fill="#000"/><circle cx="86" cy="47" r="2" fill="#fff"/><circle cx="112" cy="47" r="2" fill="#fff"/><path d="M82 70 Q100 82 118 70" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><rect x="91" y="86" width="18" height="14" fill="#111" stroke="#fff" stroke-width="2"/><path d="M64 100 L136 100 L132 160 L68 160 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M64 108 L28 90 L33 79 L68 100 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M136 108 L172 90 L167 79 L132 100 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M28 85 L18 77 M28 85 L16 88 M28 85 L22 96" stroke="#ff2d2d" stroke-width="2.5" stroke-linecap="round"/><path d="M172 85 L182 77 M172 85 L184 88 M172 85 L178 96" stroke="#ff2d2d" stroke-width="2.5" stroke-linecap="round"/><path d="M68 160 L77 200 L100 189 L123 200 L132 160 Z" fill="#222" stroke="#fff" stroke-width="1.5"/><rect x="71" y="200" width="23" height="32" fill="#111" stroke="#fff" stroke-width="2"/><rect x="106" y="200" width="23" height="32" fill="#111" stroke="#fff" stroke-width="2"/><path d="M69 232 L94 232 L96 240 L67 240 Z" fill="#222" stroke="#fff" stroke-width="1.5"/><path d="M106 232 L129 232 L131 240 L104 240 Z" fill="#222" stroke="#fff" stroke-width="1.5"/></svg>',
+
+"细狗鉴定师": '<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="240" fill="#080808"/><circle cx="100" cy="50" r="28" fill="#111" stroke="#fff" stroke-width="2.5"/><line x1="80" y1="42" x2="93" y2="43" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><path d="M107 39 Q115 35 120 42" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><circle cx="86" cy="50" r="4.5" fill="#fff"/><circle cx="86" cy="50" r="2.5" fill="#000"/><path d="M110 47 Q115 50 110 54" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><path d="M86 64 Q94 60 108 66" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/><rect x="92" y="78" width="16" height="16" fill="#111" stroke="#fff" stroke-width="2"/><path d="M68 94 L132 94 L130 156 L70 156 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M70 103 L50 148 L62 153 L80 115 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M130 102 L157 150 L148 157 L120 116 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M150 154 L152 174 L158 174 L156 154" fill="#fff" stroke="#ddd" stroke-width="1"/><path d="M152 174 L153 184 L149 184 L148 174" fill="#fff"/><line x1="142" y1="156" x2="142" y2="178" stroke="#ff2d2d" stroke-width="2"/><path d="M136 172 L142 183 L148 172" fill="none" stroke="#ff2d2d" stroke-width="2" stroke-linecap="round"/><text x="154" y="172" fill="#ff2d2d" font-size="10" font-weight="bold">细狗</text><path d="M70 156 L79 197 L100 186 L121 197 L130 156 Z" fill="#222" stroke="#fff" stroke-width="1.5"/><rect x="73" y="197" width="22" height="35" fill="#111" stroke="#fff" stroke-width="2"/><rect x="105" y="197" width="22" height="35" fill="#111" stroke="#fff" stroke-width="2"/><path d="M71 232 L95 232 L97 240 L69 240 Z" fill="#222" stroke="#fff" stroke-width="1.5"/><path d="M105 232 L127 232 L129 240 L103 240 Z" fill="#222" stroke="#fff" stroke-width="1.5"/></svg>',
+
+"生米冲碳哥": '<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="240" fill="#080808"/><circle cx="88" cy="54" r="28" fill="#111" stroke="#fff" stroke-width="2.5"/><path d="M76 48 Q80 44 84 48 Q80 52 76 48 Z" fill="none" stroke="#fff" stroke-width="2"/><circle cx="80" cy="48" r="3" fill="#fff"/><path d="M94 48 Q98 44 102 48 Q98 52 94 48 Z" fill="none" stroke="#fff" stroke-width="2"/><circle cx="98" cy="48" r="3" fill="#fff"/><ellipse cx="88" cy="70" rx="10" ry="7" fill="none" stroke="#fff" stroke-width="2.5"/><path d="M60 36 Q57 29 62 33 Z" fill="#fff" opacity="0.7"/><path d="M56 48 Q52 41 57 45 Z" fill="#fff" opacity="0.7"/><rect x="80" y="82" width="16" height="13" fill="#111" stroke="#fff" stroke-width="2"/><path d="M56 95 L120 95 L116 152 L60 152 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M60 110 L38 138 L48 146 L70 128 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M116 110 L138 138 L128 146 L106 128 Z" fill="#111" stroke="#fff" stroke-width="2"/><ellipse cx="88" cy="148" rx="48" ry="10" fill="#222" stroke="#fff" stroke-width="2"/><ellipse cx="88" cy="145" rx="38" ry="7" fill="#eee"/><text x="74" y="148" fill="#888" font-size="9">生  米</text><ellipse cx="165" cy="212" rx="11" ry="11" fill="#111" stroke="#fff" stroke-width="1.5"/><line x1="165" y1="223" x2="165" y2="234" stroke="#fff" stroke-width="2"/><line x1="148" y1="229" x2="182" y2="229" stroke="#fff" stroke-width="2"/><line x1="165" y1="234" x2="153" y2="240" stroke="#fff" stroke-width="2"/><line x1="165" y1="234" x2="177" y2="240" stroke="#fff" stroke-width="2"/><line x1="160" y1="207" x2="165" y2="212" stroke="#ff2d2d" stroke-width="1.5"/><line x1="165" y1="207" x2="160" y2="212" stroke="#ff2d2d" stroke-width="1.5"/><line x1="167" y1="207" x2="172" y2="212" stroke="#ff2d2d" stroke-width="1.5"/><line x1="172" y1="207" x2="167" y2="212" stroke="#ff2d2d" stroke-width="1.5"/><text x="140" y="203" fill="#ff2d2d" font-size="9">师傅</text><path d="M60 152 L68 193 L88 182 L108 193 L116 152 Z" fill="#333" stroke="#fff" stroke-width="1.5"/><rect x="62" y="193" width="21" height="33" fill="#111" stroke="#fff" stroke-width="2"/><rect x="95" y="193" width="21" height="33" fill="#111" stroke="#fff" stroke-width="2"/><path d="M60 226 L83 226 L85 233 L58 233 Z" fill="#222" stroke="#fff" stroke-width="1.5"/><path d="M95 226 L116 226 L118 233 L93 233 Z" fill="#222" stroke="#fff" stroke-width="1.5"/></svg>',
+
+"肌肉失忆者": '<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="240" fill="#080808"/><circle cx="100" cy="56" r="27" fill="#111" stroke="#fff" stroke-width="2.5"/><path d="M84 49 Q88 45 92 49" fill="none" stroke="#fff" stroke-width="2"/><circle cx="88" cy="52" r="3.5" fill="#fff"/><circle cx="88" cy="52" r="2" fill="#000"/><path d="M108 49 Q112 45 116 49" fill="none" stroke="#fff" stroke-width="2"/><circle cx="112" cy="52" r="3.5" fill="#fff"/><circle cx="112" cy="52" r="2" fill="#000"/><path d="M89 68 Q100 63 111 68" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/><rect x="92" y="83" width="16" height="14" fill="#111" stroke="#fff" stroke-width="2"/><path d="M78 97 L122 97 L120 157 L80 157 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M80 105 L62 148 L72 152 L88 116 Z" fill="#111" stroke="#fff" stroke-width="1.5"/><path d="M120 103 L142 78 L149 85 L126 114 Z" fill="#111" stroke="#fff" stroke-width="1.5"/><circle cx="147" cy="83" r="9" fill="#111" stroke="#fff" stroke-width="1.5"/><line x1="113" y1="55" x2="143" y2="80" stroke="#ff2d2d" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.7"/><text x="150" y="66" fill="#ff2d2d" font-size="18" font-weight="bold">?</text><text x="152" y="88" fill="#888" font-size="9">没长…</text><path d="M80 157 L88 197 L100 187 L112 197 L120 157 Z" fill="#222" stroke="#fff" stroke-width="1.5"/><rect x="82" y="197" width="19" height="36" fill="#111" stroke="#fff" stroke-width="2"/><rect x="99" y="197" width="19" height="36" fill="#111" stroke="#fff" stroke-width="2"/><path d="M80 233 L101 233 L103 240 L78 240 Z" fill="#222" stroke="#fff" stroke-width="1.5"/><path d="M99 233 L118 233 L120 240 L97 240 Z" fill="#222" stroke="#fff" stroke-width="1.5"/></svg>',
+
+"卧推废人": '<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="240" fill="#080808"/><rect x="18" y="148" width="164" height="11" fill="#222" stroke="#fff" stroke-width="2"/><rect x="28" y="159" width="14" height="44" fill="#222" stroke="#fff" stroke-width="1.5"/><rect x="158" y="159" width="14" height="44" fill="#222" stroke="#fff" stroke-width="1.5"/><circle cx="44" cy="130" r="24" fill="#111" stroke="#fff" stroke-width="2.5"/><path d="M32 121 Q36 116 41 121" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><path d="M49 121 Q53 116 57 121" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><path d="M32 127 Q36 131 41 127" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M49 127 Q53 131 57 127" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><ellipse cx="44" cy="143" rx="9" ry="6" fill="#ff2d2d" stroke="#fff" stroke-width="1.5"/><path d="M20 118 Q17 111 22 115 Z" fill="#fff" opacity="0.8"/><rect x="68" y="122" width="82" height="28" fill="#111" stroke="#fff" stroke-width="2"/><line x1="109" y1="122" x2="109" y2="150" stroke="#2a2a2a" stroke-width="1.5"/><path d="M68 125 L68 90 L76 90 L76 125" fill="#111" stroke="#fff" stroke-width="2"/><path d="M142 125 L142 90 L150 90 L150 125" fill="#111" stroke="#fff" stroke-width="2"/><rect x="76" y="85" width="66" height="9" fill="#fff" stroke="#aaa" stroke-width="1"/><rect x="66" y="80" width="10" height="19" fill="#555" stroke="#fff" stroke-width="1.5"/><rect x="142" y="80" width="10" height="19" fill="#555" stroke="#fff" stroke-width="1.5"/><text x="100" y="93" fill="#ff2d2d" font-size="9" font-weight="bold" text-anchor="middle">20kg</text><line x1="70" y1="110" x2="57" y2="102" stroke="#ff2d2d" stroke-width="1.5"/><line x1="148" y1="110" x2="161" y2="102" stroke="#ff2d2d" stroke-width="1.5"/><rect x="150" y="132" width="38" height="14" fill="#111" stroke="#fff" stroke-width="1.5"/><rect x="150" y="146" width="38" height="12" fill="#111" stroke="#fff" stroke-width="1.5"/><rect x="182" y="126" width="14" height="36" fill="#222" stroke="#fff" stroke-width="1.5"/></svg>',
+
+"腿废了选手": '<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="240" fill="#080808"/><circle cx="100" cy="42" r="24" fill="#111" stroke="#fff" stroke-width="2.5"/><line x1="86" y1="36" x2="96" y2="38" stroke="#fff" stroke-width="2" stroke-linecap="round"/><line x1="104" y1="38" x2="114" y2="36" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="90" cy="44" r="4" fill="#fff"/><circle cx="110" cy="44" r="4" fill="#fff"/><circle cx="91" cy="44" r="2.5" fill="#000"/><circle cx="111" cy="44" r="2.5" fill="#000"/><path d="M88 56 Q100 62 112 56" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/><rect x="88" y="66" width="24" height="13" fill="#111" stroke="#fff" stroke-width="2"/><path d="M36 76 L164 76 L158 145 L42 145 Z" fill="#111" stroke="#fff" stroke-width="2.5"/><ellipse cx="39" cy="89" rx="20" ry="25" fill="#111" stroke="#fff" stroke-width="2.5"/><ellipse cx="161" cy="89" rx="20" ry="25" fill="#111" stroke="#fff" stroke-width="2.5"/><path d="M52 96 Q100 108 148 96" fill="none" stroke="#ff2d2d" stroke-width="2"/><line x1="100" y1="105" x2="100" y2="145" stroke="#2a2a2a" stroke-width="1.5"/><path d="M36 82 L13 115 L23 122 L46 92 Z" fill="#111" stroke="#fff" stroke-width="2"/><path d="M164 82 L187 115 L177 122 L154 92 Z" fill="#111" stroke="#fff" stroke-width="2"/><rect x="89" y="145" width="22" height="18" fill="#ff2d2d"/><line x1="95" y1="163" x2="89" y2="236" stroke="#fff" stroke-width="4" stroke-linecap="round"/><line x1="105" y1="163" x2="111" y2="236" stroke="#fff" stroke-width="4" stroke-linecap="round"/><ellipse cx="87" cy="238" rx="11" ry="5" fill="#333" stroke="#fff" stroke-width="1.5"/><ellipse cx="113" cy="238" rx="11" ry="5" fill="#333" stroke="#fff" stroke-width="1.5"/><text x="14" y="192" fill="#ff2d2d" font-size="8">上半身</text><text x="130" y="202" fill="#ff2d2d" font-size="8">腿?</text></svg>',
+
+"手臂45cm怪": '<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="240" fill="#080808"/><circle cx="100" cy="46" r="24" fill="#111" stroke="#fff" stroke-width="2.5"/><line x1="85" y1="40" x2="95" y2="42" stroke="#fff" stroke-width="2" stroke-linecap="round"/><line x1="105" y1="42" x2="115" y2="40" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="89" cy="46" r="4" fill="#fff"/><circle cx="111" cy="46" r="4" fill="#fff"/><circle cx="90" cy="46" r="2.5" fill="#000"/><circle cx="112" cy="46" r="2.5" fill="#000"/><path d="M87 59 Q100 66 113 59" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/><rect x="91" y="70" width="18" height="14" fill="#111" stroke="#fff" stroke-width="2"/><path d="M75 84 L125 84 L122 148 L78 148 Z" fill="#111" stroke="#fff" stroke-width="2"/><ellipse cx="45" cy="100" rx="32" ry="26" fill="#111" stroke="#fff" stroke-width="2.5"/><path d="M20 90 Q32 70 50 80" fill="none" stroke="#ff2d2d" stroke-width="3"/><path d="M75 90 L42 140 L55 148 L78 105 Z" fill="#111" stroke="#fff" stroke-width="2"/><ellipse cx="155" cy="100" rx="32" ry="26" fill="#111" stroke="#fff" stroke-width="2.5"/><path d="M180 90 Q168 70 150 80" fill="none" stroke="#ff2d2d" stroke-width="3"/><path d="M125 90 L158 140 L145 148 L122 105 Z" fill="#111" stroke="#fff" stroke-width="2"/><line x1="16" y1="76" x2="16" y2="126" stroke="#ff2d2d" stroke-width="1.5"/><line x1="11" y1="76" x2="21" y2="76" stroke="#ff2d2d" stroke-width="1.5"/><line x1="11" y1="126" x2="21" y2="126" stroke="#ff2d2d" stroke-width="1.5"/><text x="1" y="103" fill="#ff2d2d" font-size="8" font-weight="bold">45</text><text x="1" y="113" fill="#ff2d2d" font-size="8" font-weight="bold">cm</text><path d="M78 148 L85 188 L100 177 L115 188 L122 148 Z" fill="#222" stroke="#fff" stroke-width="1.5"/><rect x="80" y="188" width="18" height="40" fill="#111" stroke="#fff" stroke-width="2"/><rect x="102" y="188" width="18" height="40" fill="#111" stroke="#fff" stroke-width="2"/><path d="M78 228 L98 228 L100 236 L76 236 Z" fill="#222" stroke="#fff" stroke-width="1.5"/><path d="M102 228 L120 228 L122 236 L100 236 Z" fill="#222" stroke="#fff" stroke-width="1.5"/></svg>'
+
+};
+
+/* ===== QUESTIONS ===== */
+const questions = [
+  {q:"别人说你练得像细狗",opts:["你行不行啊细狗！","我是健美！不是细狗！","呜呜他们欺负我"],scores:[[0,0,3],[3,0,0],[0,3,0]]},
+  {q:"有人说你头尖尖的",opts:["那我问你！你是男的女的？","我头尖怎么了！我就尖！","再说我申气了啊！"],scores:[[0,0,3],[3,0,0],[0,3,0]]},
+  {q:"训练前补剂怎么选",opts:["氮泵干三勺！直接起飞！","蛋白粉必须喝！不喝练不大！","啥也不吃，意念练！"],scores:[[0,3,0],[3,0,0],[0,0,3]]},
+  {q:"卧推重量",opts:["直接100kg拉满！","60kg意思意思","20kg都费劲"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
+  {q:"练腿日怎么过",opts:["必须深蹲硬拉！","意思两下算了","腿没感觉，不练了！"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
+  {q:"被人挑衅了",opts:["你给我脆地上道歉！","没揍死你算给面子了","我不想跟你吵"],scores:[[3,0,0],[2,1,0],[0,0,3]]},
+  {q:"你的体脂率",opts:["我体脂3%！你懂不懂！","还行，有点腹肌","无所谓，开心就好"],scores:[[0,3,0],[3,0,0],[0,0,3]]},
+  {q:"今天训练状态",opts:["暴躁！谁来干谁！","正常训练","精神状态领先20年"],scores:[[3,0,0],[0,0,3],[0,3,0]]},
+  {q:"师傅让你冲碳买米",opts:["直接买熟米糕","随便买点","生米冲碳！师傅晕倒"],scores:[[3,0,0],[0,0,3],[0,3,0]]},
+  {q:"别人拍你视频",opts:["拍什么拍！我是健美！","害羞躲开","他们网暴我！"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
+  {q:"手臂围度多少",opts:["手臂45cm！你们别吹牛逼","还在练，差不多了","不知道，没量过"],scores:[[0,3,0],[3,0,0],[0,0,3]]},
+  {q:"常熟能举办DMS吗",opts:["能！常熟战神坐镇！","常熟可能举办DMS，不过有点不可能","不知道DMS是啥"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
+  {q:"肌肉没长怎么办",opts:["加大重量！继续干！","我肌肉忘长了……","可能天赋不行"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
+  {q:"大象你过来一下",opts:["大象你过来！我有话说！","大象？什么大象？","不敢叫，怕被踩"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
+  {q:"喝什么可乐",opts:["有糖的！补碳！","无糖可乐，冰镇更痛快","随便，都行"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
+  {q:"师傅晕倒了",opts:["赶紧送医院！","发朋友圈：师傅死了","不知道怎么办，站着"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
+  {q:"只练上半身不练腿",opts:["腿也要练！全面发展！","手臂45cm就够了","腿没感觉，不练了"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
+  {q:"左脑攻击右脑",opts:["我脑子没问题！你才有问题！","肌肉挤压大脑，正常现象","我也不知道咋回事"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
+  {q:"谈恋爱",opts:["谁敢追我对象我揍谁！","我谈了七八次了，只是不想谈","没人追我"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
+  {q:"开开心心大药房",opts:["买什么药！我身体好得很！","九龙拉棺全套来一份","不知道买啥，随便"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
+  {q:"金山苑安全屋",opts:["安全屋？我哪都安全！","金山苑是我的主场","不认识路，迷路了"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
+  {q:"被人说精神状态不正常",opts:["你才不正常！你全家不正常！","我精神状态领先你20年","可能真的有点问题"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
+  {q:"再说一遍我申气了",opts:["申气了怎样！来打啊！","再说我申气了啊！","算了算了，忍了"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
+  {q:"健身效果怎么样",opts:["我是健美！效果拉满！","精神状态领先，身材慢慢来","练了好久没啥变化"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
+  {q:"最后一题：你是谁",opts:["我是常熟战神！","我是常熟阿诺！","我是……细狗？"],scores:[[3,0,0],[0,3,0],[0,0,3]]}
+];
+
+/* ===== PERSONALITIES ===== */
+const personalities = {
+  "暴躁_废柴":{name:"常熟战神",  type:"暴躁型 · 废柴倾向", quote:"我是健美！我不是细狗！",         desc:"暴躁值拉满，谁惹你谁倒霉。常熟街头第一战神，不服就干，干完再说！"},
+  "暴躁_诺化":{name:"氮泵战神",  type:"暴躁型 · 诺化倾向", quote:"氮泵干三勺！直接起飞！",         desc:"你跟阿诺一样，训练全靠氮泵续命，精神状态领先普通人20年，典型的常熟分诺！"},
+  "暴躁_暴躁":{name:"道歉哥",    type:"纯暴躁型",           quote:"你给我脆地上道歉！",             desc:"爱生气、要别人道歉、暴躁易怒。你的字典里只有一个词：道歉！"},
+  "诺化_暴躁":{name:"尖头哲学家",type:"诺化型 · 暴躁倾向", quote:"那我问你？我头尖怎么了！",       desc:"诺式逻辑大师，左右脑互博，爱反问。你的思维方式普通人根本理解不了！"},
+  "诺化_废柴":{name:"DMS逻辑大师",type:"诺化型 · 废柴倾向",quote:"常熟可能举办DMS，不过有点不可能",desc:"说话前后矛盾，诺式相对论，逻辑混乱。但你就是有一种独特的魅力！"},
+  "诺化_诺化":{name:"精神氮泵王",type:"纯诺化型",           quote:"我精神状态领先20年",             desc:"精神不正常、抽象、想法怪异。你的精神世界比任何人都丰富！"},
+  "废柴_暴躁":{name:"细狗鉴定师",type:"废柴型 · 暴躁倾向", quote:"你行不行啊细狗！",               desc:"天天骂别人细狗，自我感觉良好。其实你就是最懂细狗的那个人！"},
+  "废柴_诺化":{name:"生米冲碳哥",type:"废柴型 · 诺化倾向", quote:"师傅死了！生米冲碳！",           desc:"办事离谱、坑队友、抽象行为。你的操作让所有人都目瞪口呆！"},
+  "废柴_废柴":{name:"肌肉失忆者",type:"纯废柴型",           quote:"我肌肉忘长了……",               desc:"练了没效果、自我安慰、天赋不行。但没关系，精神上你已经是冠军了！"}
+};
+
+/* ===== STATE ===== */
+let scores = [0,0,0], current = 0, currentResult = null;
+
+/* ===== PAGE ===== */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active','visible'));
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('visible')));
+  window.scrollTo(0,0);
+}
+
+/* ===== QUIZ ===== */
+function startQuiz() {
+  scores=[0,0,0]; current=0;
+  showPage('quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  const pct = Math.round(current/questions.length*100);
+  document.getElementById('q-num').textContent = 'Q' + String(current+1).padStart(2,'0') + ' / ' + questions.length;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('progress-pct').textContent = '诺化进度 ' + pct + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+  const labels = ['A','B','C'];
+  const optsEl = document.getElementById('q-opts');
+  optsEl.innerHTML = '';
+  q.opts.forEach((opt,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerHTML = '<span class="opt-badge">' + labels[i] + '</span><span class="opt-text">' + opt + '</span>';
+    btn.onclick = () => selectOpt(i, btn);
+    optsEl.appendChild(btn);
+  });
+}
+
+function selectOpt(idx, btn) {
+  document.querySelectorAll('.opt-btn').forEach(b => b.classList.add('disabled'));
+  btn.classList.add('selected');
+  const s = questions[current].scores[idx];
+  scores[0]+=s[0]; scores[1]+=s[1]; scores[2]+=s[2];
+  setTimeout(() => { current++; current < questions.length ? renderQuestion() : showResult(); }, 420);
+}
+
+/* ===== RESULT ===== */
+function getResult() {
+  const max = Math.max(...scores);
+  const maxIdx = scores.indexOf(max);
+  const tmp = [...scores]; tmp[maxIdx] = -1;
+  const secondIdx = tmp.indexOf(Math.max(...tmp));
+  const dims = ['暴躁','诺化','废柴'];
+  return personalities[dims[maxIdx]+'_'+dims[secondIdx]] || personalities['废柴_废柴'];
+}
+
+function drawRadar(sc) {
+  const max = Math.max(...sc, 1);
+  const norm = sc.map(s => Math.max(s/max, 0.08));
+  const cx=100, cy=108, r=72;
+  const angs = [-90,150,30].map(d => d*Math.PI/180);
+  const pts = angs.map((a,i) => [cx+r*norm[i]*Math.cos(a), cy+r*norm[i]*Math.sin(a)]);
+  const outer = angs.map(a => [cx+r*Math.cos(a), cy+r*Math.sin(a)]);
+  const ptStr = pts.map(p => p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const grids = [0.33,0.66,1].map(s => {
+    const gp = angs.map(a => [cx+r*s*Math.cos(a), cy+r*s*Math.sin(a)]);
+    return '<polygon points="'+gp.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')+'" fill="none" stroke="#222" stroke-width="1"/>';
+  }).join('');
+  const axes = outer.map(p => '<line x1="'+cx+'" y1="'+cy+'" x2="'+p[0].toFixed(1)+'" y2="'+p[1].toFixed(1)+'" stroke="#2a2a2a" stroke-width="1"/>').join('');
+  const dots = pts.map(p => '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="4.5" fill="#ff2d2d"/>').join('');
+  const labs = [
+    {x:outer[0][0],   y:outer[0][1]-13, t:'暴躁', a:'middle'},
+    {x:outer[1][0]-12,y:outer[1][1]+10, t:'诺化', a:'end'},
+    {x:outer[2][0]+12,y:outer[2][1]+10, t:'废柴', a:'start'}
+  ].map(l => '<text x="'+l.x.toFixed(1)+'" y="'+l.y.toFixed(1)+'" fill="#999" font-size="12" font-family="system-ui" text-anchor="'+l.a+'">'+l.t+'</text>').join('');
+  document.getElementById('radar-wrap').innerHTML =
+    '<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="#080808"/>' +
+    grids+axes+'<polygon points="'+ptStr+'" fill="#ff2d2d" fill-opacity="0.2" stroke="#ff2d2d" stroke-width="2"/>'+dots+labs+
+    '<circle cx="'+cx+'" cy="'+cy+'" r="2" fill="#333"/></svg>';
+}
+
+function showResult() {
+  const p = getResult();
+  currentResult = p;
+  document.getElementById('res-type').textContent = p.type;
+  document.getElementById('persona-img').innerHTML = svgs[p.name] || svgs['肌肉失忆者'];
+  document.getElementById('res-name').textContent = p.name;
+  document.getElementById('res-quote').textContent = '「' + p.quote + '」';
+  document.getElementById('res-desc').textContent = p.desc;
+  document.getElementById('share-main').innerHTML = '我测出来是「常熟阿诺之<strong>【'+p.name+'】</strong>」';
+  document.getElementById('share-quote-text').textContent = '"' + p.quote + '"';
+  document.getElementById('copy-btn').textContent = '复制分享文案';
+  drawRadar(scores);
+  showPage('result');
+  const maxScore = Math.max(...scores,1);
+  setTimeout(() => {
+    [0,1,2].forEach(i => {
+      document.getElementById('bar-'+i).style.width = Math.round(scores[i]/maxScore*100)+'%';
+      document.getElementById('val-'+i).textContent = scores[i];
+    });
+  }, 350);
+}
+
+function copyShare() {
+  const p = currentResult || getResult();
+  const text = '我测出来是「常熟阿诺之【'+p.name+'】」\n"'+p.quote+'"\n不服来辩！细狗！\n\n测测你是哪种常熟阿诺？';
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✓ 已复制！';
+    setTimeout(() => { btn.textContent = '复制分享文案'; }, 2200);
+  }).catch(() => alert(text));
+}
+
+function restartQuiz() { startQuiz(); }
+
+/* ===== INIT ===== */
+document.getElementById('user-count').textContent = (38000+Math.floor(Math.random()*58000)).toLocaleString();
+showPage('welcome');
+</script>
+</body>
+</html>
