@@ -98,6 +98,9 @@
     .share-quote-text { font-size: 13px; color: var(--muted); font-style: italic; margin-bottom: 14px; }
     .share-slogan { font-size: 12px; color: var(--dim); border-top: 1px solid #1a1a1a; padding-top: 12px; letter-spacing: 1px; }
     .btn-group { display: flex; flex-direction: column; gap: 10px; }
+    .nuo-level { display: inline-block; background: var(--red); color: #000; font-size: 12px; padding: 4px 14px; font-weight: 900; letter-spacing: 3px; }
+    .result-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
+    .result-tag { border: 1px solid #2a2a2a; padding: 4px 10px; font-size: 11px; color: #888; }
   </style>
 </head>
 <body>
@@ -121,7 +124,7 @@
     </div>
     <div class="welcome-stats">
       <div class="stat-item"><span class="stat-num" id="user-count">--</span><span class="stat-label">人已测试</span></div>
-      <div class="stat-item"><span class="stat-num">12</span><span class="stat-label">种人格</span></div>
+      <div class="stat-item"><span class="stat-num">16</span><span class="stat-label">种人格</span></div>
       <div class="stat-item"><span class="stat-num">25</span><span class="stat-label">道题目</span></div>
     </div>
     <div class="welcome-tags">
@@ -150,11 +153,12 @@
     <p class="result-eyebrow">▶ 测试结果</p>
     <div class="persona-img-outer">
       <div class="persona-img-wrap" id="persona-img"></div>
-      <div class="persona-type-row"><span class="type-badge" id="res-type"></span></div>
+      <div class="persona-type-row"><span class="nuo-level" id="res-nuo-level"></span></div>
     </div>
     <h2 class="result-name" id="res-name"></h2>
     <p class="result-quote" id="res-quote"></p>
     <p class="result-desc" id="res-desc"></p>
+    <div class="result-tags" id="res-tags"></div>
     <p class="section-label">— 三维评估 —</p>
     <div class="radar-wrap" id="radar-wrap"></div>
     <div class="score-bars">
@@ -208,45 +212,61 @@ const svgs = {
 
 /* ===== QUESTIONS ===== */
 const questions = [
-  {q:"别人说你练得像细狗",opts:["你行不行啊细狗！","我是健美！不是细狗！","呜呜他们欺负我"],scores:[[0,0,3],[3,0,0],[0,3,0]]},
-  {q:"有人说你头尖尖的",opts:["那我问你！你是男的女的？","我头尖怎么了！我就尖！","再说我申气了啊！"],scores:[[0,0,3],[3,0,0],[0,3,0]]},
-  {q:"训练前补剂怎么选",opts:["氮泵干三勺！直接起飞！","蛋白粉必须喝！不喝练不大！","啥也不吃，意念练！"],scores:[[0,3,0],[3,0,0],[0,0,3]]},
-  {q:"卧推重量",opts:["直接100kg拉满！","60kg意思意思","20kg都费劲"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
-  {q:"练腿日怎么过",opts:["必须深蹲硬拉！","意思两下算了","腿没感觉，不练了！"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
-  {q:"被人挑衅了",opts:["你给我脆地上道歉！","没揍死你算给面子了","我不想跟你吵"],scores:[[3,0,0],[2,1,0],[0,0,3]]},
-  {q:"你的体脂率",opts:["我体脂3%！你懂不懂！","还行，有点腹肌","无所谓，开心就好"],scores:[[0,3,0],[3,0,0],[0,0,3]]},
-  {q:"今天训练状态",opts:["暴躁！谁来干谁！","正常训练","精神状态领先20年"],scores:[[3,0,0],[0,0,3],[0,3,0]]},
-  {q:"师傅让你冲碳买米",opts:["直接买熟米糕","随便买点","生米冲碳！师傅晕倒"],scores:[[3,0,0],[0,0,3],[0,3,0]]},
-  {q:"别人拍你视频",opts:["拍什么拍！我是健美！","害羞躲开","他们网暴我！"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
-  {q:"手臂围度多少",opts:["手臂45cm！你们别吹牛逼","还在练，差不多了","不知道，没量过"],scores:[[0,3,0],[3,0,0],[0,0,3]]},
-  {q:"常熟能举办DMS吗",opts:["能！常熟战神坐镇！","常熟可能举办DMS，不过有点不可能","不知道DMS是啥"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
-  {q:"肌肉没长怎么办",opts:["加大重量！继续干！","我肌肉忘长了……","可能天赋不行"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
-  {q:"大象你过来一下",opts:["大象你过来！我有话说！","大象？什么大象？","不敢叫，怕被踩"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
-  {q:"喝什么可乐",opts:["有糖的！补碳！","无糖可乐，冰镇更痛快","随便，都行"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
-  {q:"师傅晕倒了",opts:["赶紧送医院！","发朋友圈：师傅死了","不知道怎么办，站着"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
-  {q:"只练上半身不练腿",opts:["腿也要练！全面发展！","手臂45cm就够了","腿没感觉，不练了"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
-  {q:"左脑攻击右脑",opts:["我脑子没问题！你才有问题！","肌肉挤压大脑，正常现象","我也不知道咋回事"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
-  {q:"谈恋爱",opts:["谁敢追我对象我揍谁！","我谈了七八次了，只是不想谈","没人追我"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
-  {q:"开开心心大药房",opts:["买什么药！我身体好得很！","九龙拉棺全套来一份","不知道买啥，随便"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
-  {q:"金山苑安全屋",opts:["安全屋？我哪都安全！","金山苑是我的主场","不认识路，迷路了"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
-  {q:"被人说精神状态不正常",opts:["你才不正常！你全家不正常！","我精神状态领先你20年","可能真的有点问题"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
-  {q:"再说一遍我申气了",opts:["申气了怎样！来打啊！","再说我申气了啊！","算了算了，忍了"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
-  {q:"健身效果怎么样",opts:["我是健美！效果拉满！","精神状态领先，身材慢慢来","练了好久没啥变化"],scores:[[3,0,0],[0,3,0],[0,0,3]]},
-  {q:"最后一题：你是谁",opts:["我是常熟战神！","我是常熟阿诺！","我是……细狗？"],scores:[[3,0,0],[0,3,0],[0,0,3]]}
+  {title:"健身房有人盯着你练，还小声嘀咕你是细狗",options:[{text:"你行不行啊细狗！你给我脆地上道歉！",score:[3,0,0]},{text:"那我问你？你是男的女的？我是健美！我不是细狗！",score:[0,3,0]},{text:"呜呜他们都欺负我，我不练了",score:[0,0,3]}]},
+  {title:"练腿日到了，你到了健身房第一件事",options:[{text:"直接深蹲硬拉拉满，干就完了！",score:[3,0,0]},{text:"那我问你？腿没感觉怎么练？练腿不练手臂等于白练！",score:[0,3,0]},{text:"腿没感觉，不练了，去练手臂了",score:[0,0,3]}]},
+  {title:"师傅让你赛前冲碳，去买米糕回来",options:[{text:"直接买好熟米糕，按时冲碳，绝不耽误比赛！",score:[3,0,0]},{text:"生米冲碳！师傅都嘎了！",score:[0,3,0]},{text:"忘了买了，随便买点麦当劳对付一下",score:[0,0,3]}]},
+  {title:"有人说你头尖，不像练健美的",options:[{text:"再说我申气了啊！你给我闭嘴！",score:[3,0,0]},{text:"我头尖怎么了！我就尖怎么了！那我问你？你头顶是尖的还是秃的？",score:[0,3,0]},{text:"他们都网暴我，说我头尖",score:[0,0,3]}]},
+  {title:"训练前准备喝补剂，你会选",options:[{text:"氮泵干三勺！直接起飞！",score:[3,0,0]},{text:"九龙拉棺全套安排上，一天一头羊，干倒李亚强！",score:[0,3,0]},{text:"啥也不喝，练不练得大都无所谓",score:[0,0,3]}]},
+  {title:"别人问你体脂率多少",options:[{text:"老子体脂3%！你懂不懂啊！",score:[3,0,0]},{text:"脸不油怎么能有光彩呢？体脂不低怎么能叫健美呢？",score:[0,3,0]},{text:"不知道，反正腹肌也没练出来，无所谓",score:[0,0,3]}]},
+  {title:"卧推的时候被人压杠了，旁边人还笑你",options:[{text:"没从赛场回来揍死他已经算给他面子了！",score:[3,0,0]},{text:"那我问你？你卧推能推20公斤吗？我只是今天状态不好！",score:[0,3,0]},{text:"卧推20公斤都费劲，以后不练卧推了",score:[0,0,3]}]},
+  {title:"有人问你常熟会不会举办DMS比赛",options:[{text:"必须办！我第一个报名！",score:[3,0,0]},{text:"常熟可能举办DMS，不过常熟举办DMS有点不可能",score:[0,3,0]},{text:"办不办跟我没关系，我也比不过",score:[0,0,3]}]},
+  {title:"练了半年，肌肉一点没长，你会",options:[{text:"加重量！加组数！干就完了！",score:[3,0,0]},{text:"我肌肉忘长了……肌肉挤压大脑，左脑攻击右脑",score:[0,3,0]},{text:"反正也练不大，不练了",score:[0,0,3]}]},
+  {title:"健身和谈恋爱冲突了，你选哪个",options:[{text:"必须选健美！女人只会影响我增肌的速度！",score:[3,0,0]},{text:"我谈了七八次恋爱了，我只是不想谈恋爱，男人要大胆点，哪怕被你老子骗滚",score:[0,3,0]},{text:"恋爱重要，健身哪有谈恋爱香",score:[0,0,3]}]},
+  {title:"有人在健身房拍你训练的视频",options:[{text:"拍什么拍！我是健美！再拍我把你手机摔了！",score:[3,0,0]},{text:"表情再凶狠一点，显得胸肌显大一点",score:[0,3,0]},{text:"别拍了别拍了，他们又要网暴我了",score:[0,0,3]}]},
+  {title:"练后放纵餐，你会选",options:[{text:"严格干净饮食，一口放纵餐都不碰！",score:[3,0,0]},{text:"我阿诺，今天出来吃麦当劳。无糖可乐和有糖的，相比之下冰镇可乐喝的更痛快",score:[0,3,0]},{text:"炸鸡可乐全安排，练了不就是为了吃吗",score:[0,0,3]}]},
+  {title:"你的健身搭子放你鸽子，你会",options:[{text:"你行不行啊细狗！以后别跟我一起练了！",score:[3,0,0]},{text:"大象你过来一下！我问你为什么放我鸽子？",score:[0,3,0]},{text:"正好我也不想练了，回家躺平",score:[0,0,3]}]},
+  {title:"有人说你只练手臂不练腿，身材不协调",options:[{text:"老子今天就练腿给你看！",score:[3,0,0]},{text:"手臂45cm！你们别吹牛逼！练腿不练手臂，等于白来健身房",score:[0,3,0]},{text:"腿练着太疼了，还是练手臂舒服",score:[0,0,3]}]},
+  {title:"赛前被对手挑衅，你会",options:[{text:"赛场上干死他！",score:[3,0,0]},{text:"眼神屌利不代表人品就不行，不代表是坏人。赛场上见",score:[0,3,0]},{text:"我有点害怕，不想比了",score:[0,0,3]}]},
+  {title:"有人问你蛋白粉有没有用",options:[{text:"必须有用！训练后必喝！",score:[3,0,0]},{text:"蛋白粉不喝练不大，懂吗？",score:[0,3,0]},{text:"没用，我喝了也没练大",score:[0,0,3]}]},
+  {title:"健身房全是陌生人，你社恐犯了，你会",options:[{text:"怕什么！老子是练健美的！直接开练！",score:[3,0,0]},{text:"这个世界其实是一个巨大的阿诺，他们都是来学我健身的",score:[0,3,0]},{text:"溜了溜了，回家躺着，明天再练",score:[0,0,3]}]},
+  {title:"训练状态不好，浑身没劲，你会",options:[{text:"氮泵再干两勺！必须练完今天的计划！",score:[3,0,0]},{text:"我精神状态领先20年，身体没劲不代表精神没劲",score:[0,3,0]},{text:"不练了，洗个澡回家",score:[0,0,3]}]},
+  {title:"有人说你练得不如李亚强",options:[{text:"老子早晚干倒李亚强！",score:[3,0,0]},{text:"李亚强不是我爸，真不是我爸。一天一头羊，干倒李亚强！",score:[0,3,0]},{text:"本来就不如，他是我师傅",score:[0,0,3]}]},
+  {title:"师傅晕倒了，你第一时间会",options:[{text:"赶紧打120！送医院！",score:[3,0,0]},{text:"师傅死了！发个朋友圈！",score:[0,3,0]},{text:"我好害怕，不知道怎么办",score:[0,0,3]}]},
+  {title:"有人问你练背怎么练",options:[{text:"引体向上+硬拉，干就完了！",score:[3,0,0]},{text:"练背大，得练背，引体向下练背，练的又大又宽的背，得是练背",score:[0,3,0]},{text:"不知道，我从来不练背",score:[0,0,3]}]},
+  {title:"被人网暴，说你练健美像傻子",options:[{text:"你给我脆地上道歉！再说我网暴你！",score:[3,0,0]},{text:"傻子当然也可以直播了，是人都可以直播，算了下播",score:[0,3,0]},{text:"他们都欺负我，我不想练健美了",score:[0,0,3]}]},
+  {title:"一周安排几次训练",options:[{text:"天天干！健身房就是我家！",score:[3,0,0]},{text:"我一周练七天也不太可能，但是我一周天天都练",score:[0,3,0]},{text:"想起来就练，想不起来就不练",score:[0,0,3]}]},
+  {title:"情人节和练腿日撞了，你会",options:[{text:"必须练腿！情人节年年有，练腿日不能耽误！",score:[3,0,0]},{text:"我当然会把心爱的人搂在左边，因为左边是靠近心脏的，懂吗？练腿也不能耽误",score:[0,3,0]},{text:"当然去过节，练腿哪有过节香",score:[0,0,3]}]},
+  {title:"警察叔叔找你问话，你第一反应是",options:[{text:"积极配合，该说啥说啥",score:[3,0,0]},{text:"开开心心大药房！金山苑安全屋！我要回金山苑！",score:[0,3,0]},{text:"我好害怕，我什么都没干",score:[0,0,3]}]}
 ];
 
-/* ===== PERSONALITIES ===== */
-const personalities = {
-  "暴躁_废柴":{name:"常熟战神",  type:"暴躁型 · 废柴倾向", quote:"我是健美！我不是细狗！",         desc:"暴躁值拉满，谁惹你谁倒霉。常熟街头第一战神，不服就干，干完再说！"},
-  "暴躁_诺化":{name:"氮泵战神",  type:"暴躁型 · 诺化倾向", quote:"氮泵干三勺！直接起飞！",         desc:"你跟阿诺一样，训练全靠氮泵续命，精神状态领先普通人20年，典型的常熟分诺！"},
-  "暴躁_暴躁":{name:"道歉哥",    type:"纯暴躁型",           quote:"你给我脆地上道歉！",             desc:"爱生气、要别人道歉、暴躁易怒。你的字典里只有一个词：道歉！"},
-  "诺化_暴躁":{name:"尖头哲学家",type:"诺化型 · 暴躁倾向", quote:"那我问你？我头尖怎么了！",       desc:"诺式逻辑大师，左右脑互博，爱反问。你的思维方式普通人根本理解不了！"},
-  "诺化_废柴":{name:"DMS逻辑大师",type:"诺化型 · 废柴倾向",quote:"常熟可能举办DMS，不过有点不可能",desc:"说话前后矛盾，诺式相对论，逻辑混乱。但你就是有一种独特的魅力！"},
-  "诺化_诺化":{name:"精神氮泵王",type:"纯诺化型",           quote:"我精神状态领先20年",             desc:"精神不正常、抽象、想法怪异。你的精神世界比任何人都丰富！"},
-  "废柴_暴躁":{name:"细狗鉴定师",type:"废柴型 · 暴躁倾向", quote:"你行不行啊细狗！",               desc:"天天骂别人细狗，自我感觉良好。其实你就是最懂细狗的那个人！"},
-  "废柴_诺化":{name:"生米冲碳哥",type:"废柴型 · 诺化倾向", quote:"师傅死了！生米冲碳！",           desc:"办事离谱、坑队友、抽象行为。你的操作让所有人都目瞪口呆！"},
-  "废柴_废柴":{name:"肌肉失忆者",type:"纯废柴型",           quote:"我肌肉忘长了……",               desc:"练了没效果、自我安慰、天赋不行。但没关系，精神上你已经是冠军了！"}
+/* ===== SVG KEY MAPPING ===== */
+const svgKeyMap = {
+  "奎特门门主·常熟战神":"常熟战神","细狗鉴定师":"细狗鉴定师","道歉哥":"道歉哥",
+  "氮泵干三勺战神":"氮泵战神","体脂3%偏执狂":"常熟战神","干倒李亚强预备役":"常熟战神",
+  "尖头哲学家":"尖头哲学家","DMS相对论大师":"DMS逻辑大师","生米冲碳带师":"生米冲碳哥",
+  "九龙拉棺创始人":"精神氮泵王","开开心心大药房跑男":"生米冲碳哥","麦当劳健美选手":"肌肉失忆者",
+  "肌肉失忆者":"肌肉失忆者","腿废了摆烂王":"腿废了选手","卧推20公斤废人":"卧推废人","网暴受害者":"肌肉失忆者"
 };
+
+/* ===== RESULTS (16种) ===== */
+const results = [
+  {type:"奎特门门主·常熟战神",nuohuaLevel:"SSS级",quote:"没从赛场回来揍死他已经算给他面子了！",desc:"你就是阿诺本诺，常熟健美圈的天！谁挑衅你你怼谁，赛场气场拉满，健身全靠一股不服输的狠劲，细狗在你面前根本抬不起头，整个健身房都得听你号令。",tag:["怼人王者","健美圈扛把子","不服就干","脆地上道歉发起人"],scoreType:0},
+  {type:"细狗鉴定师",nuohuaLevel:"SS级",quote:"你行不行啊细狗！",desc:"你长了一双火眼金睛，方圆十里的细狗都逃不过你的眼睛。健身房里但凡有人划水、重量不到位，你一句"你行不行啊细狗"直接给他干破防，是健身圈的细狗天敌。",tag:["细狗杀手","嘴强王者","健身房纪律委员","怼人不眨眼"],scoreType:0},
+  {type:"道歉哥",nuohuaLevel:"SS级",quote:"你给我脆地上道歉！",desc:"你的人生信条就是：惹我可以，必须给我脆地上道歉！但凡有人惹你不爽、质疑你的健美实力，你第一反应就是让他下跪道歉，脾气来的快去的也快，主打一个暴躁又可爱。",tag:["申气达人","道歉狂魔","脾气火爆","自尊心极强"],scoreType:0},
+  {type:"氮泵干三勺战神",nuohuaLevel:"S级",quote:"氮泵干三勺！直接起飞！",desc:"你健身的动力全靠氮泵续命，训练前不干三勺氮泵，浑身都不得劲。只要氮泵到位，200公斤的卧推你都敢冲，精神状态直接领先健身房所有人20年，是健身房里的亢奋天花板。",tag:["氮泵信徒","亢奋达人","训练疯子","精神氮泵天花板"],scoreType:0},
+  {type:"体脂3%偏执狂",nuohuaLevel:"S级",quote:"我体脂3%！你懂不懂啊！",desc:"你对体脂率的执念已经刻进了DNA里，逢人就说自己体脂3%，饮食控制到极致，一口油都不碰，主打一个健美选手的极致自律，体脂秤就是你的本命神器。",tag:["自律卷王","体脂偏执狂","干净饮食代言人","健美狂热者"],scoreType:0},
+  {type:"干倒李亚强预备役",nuohuaLevel:"SS级",quote:"一天一头羊，干倒李亚强！",desc:"你健身的终极目标就是干倒师傅，每天一头羊疯狂增肌，卧推重量一天比一天猛，主打一个青出于蓝而胜于蓝，整个常熟健美圈都等着看你超越师傅的那天。",tag:["增肌狂魔","目标明确","狠人一个","师傅天敌"],scoreType:0},
+  {type:"尖头哲学家",nuohuaLevel:"SSS级",quote:"我头尖怎么了！我就尖怎么了！",desc:"你深得阿诺的哲学精髓，主打一个"我即世界"，头尖是你的标志，诺式反问是你的武器，左脑攻击右脑是你的日常，一张嘴就是"那我问你？"，整个健身房没人能辩得过你。",tag:["诺式相对论创始人","灵魂反问大师","抽象哲学家","左脑互博达人"],scoreType:1},
+  {type:"DMS相对论大师",nuohuaLevel:"SS级",quote:"常熟可能举办DMS，不过常熟举办DMS有点不可能",desc:"你掌握了诺式相对论的终极密码，说话永远前后矛盾但又毫无破绽，主打一个"可能但不可能"，健身计划永远是"天天练但也不太可能练"，没人能猜透你的想法。",tag:["逻辑鬼才","相对论大师","薛定谔的健身","说话艺术家"],scoreType:1},
+  {type:"生米冲碳带师",nuohuaLevel:"SS级",quote:"生米冲碳！师傅都嘎了！",desc:"你是健身圈的抽象带师，主打一个办事离谱，师傅让你买米糕冲碳，你能买成生米直接冲，坑师傅第一名。健身计划永远能被你玩出花来，主打一个意料之外，情理之中。",tag:["抽象天花板","坑师傅达人","健身离谱王","名场面创造者"],scoreType:1},
+  {type:"九龙拉棺创始人",nuohuaLevel:"S级",quote:"九龙拉棺，直接起飞！",desc:"你是健身补剂圈的天花板，别人补剂只喝蛋白粉氮泵，你直接九龙拉棺全套安排上，主打一个补剂拉满，状态起飞，只要补剂够多，就没有练不大的肌肉。",tag:["补剂狂魔","科技天花板","起飞达人","健美科技党"],scoreType:1},
+  {type:"开开心心大药房跑男",nuohuaLevel:"SSS级",quote:"开开心心大药房！金山苑安全屋！",desc:"你是阿诺名场面的嫡系传人，遇事第一反应就是往金山苑安全屋跑，开开心心大药房是你的本命圣地，主打一个遇事不慌，先回安全屋再说，抽象属性拉满。",tag:["名场面复刻达人","安全屋忠实信徒","抽象跑男","遇事就溜"],scoreType:1},
+  {type:"麦当劳健美选手",nuohuaLevel:"S级",quote:"我阿诺，今天出来吃麦当劳。",desc:"你深得阿诺的健身精髓，练得好不好不重要，麦当劳必须吃好。冰镇可乐是你的本命饮品，练后放纵餐永远首选麦当劳，主打一个健身吃饭两不误，快乐健美第一人。",tag:["快乐健身","麦当劳代言人","冰镇可乐狂魔","佛系健美"],scoreType:1},
+  {type:"肌肉失忆者",nuohuaLevel:"A级",quote:"我肌肉忘长了……",desc:"你是健身房的常驻划水选手，练了一年又一年，肌肉一点没长，主打一个肌肉集体失忆。每天都去健身房打卡，但练了等于没练，安慰自己"今天也努力了"，佛系健身天花板。",tag:["划水达人","佛系健身","肌肉失忆","打卡型选手"],scoreType:2},
+  {type:"腿废了摆烂王",nuohuaLevel:"A级",quote:"腿没感觉，不练了",desc:"你是健身房里著名的"上半身战士"，永远只练手臂胸肌，练腿日永远缺席，主打一个"腿没感觉，不练了"，哪怕腿细的像筷子，也绝不踏进深蹲架一步，摆烂属性拉满。",tag:["不练腿星人","上半身战神","练腿日天敌","摆烂达人"],scoreType:2},
+  {type:"卧推20公斤废人",nuohuaLevel:"B级",quote:"卧推20公斤都费劲",desc:"你是健身房里的卧推废人，空杆都推不稳，20公斤的卧推都能把你压杠，主打一个力不从心。每次练胸都划水，练了半年卧推重量一点没涨，主打一个陪伴式健身。",tag:["卧推废物","划水天花板","陪伴型健身","力量废柴"],scoreType:2},
+  {type:"网暴受害者",nuohuaLevel:"B级",quote:"他们都欺负我，网暴我",desc:"你是健身圈的玻璃心小可爱，别人一句无心的话，你都觉得是在网暴你。别人说你练得不好，你直接破防不想练了，主打一个敏感脆弱，需要全健身房的人哄着你练。",tag:["玻璃心","敏感达人","破防专业户","健身小可怜"],scoreType:2}
+];
 
 /* ===== STATE ===== */
 let scores = [0,0,0], current = 0, currentResult = null;
@@ -271,16 +291,16 @@ function renderQuestion() {
   const q = questions[current];
   const pct = Math.round(current/questions.length*100);
   document.getElementById('q-num').textContent = 'Q' + String(current+1).padStart(2,'0') + ' / ' + questions.length;
-  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('q-text').textContent = q.title;
   document.getElementById('progress-pct').textContent = '诺化进度 ' + pct + '%';
   document.getElementById('progress-fill').style.width = pct + '%';
   const labels = ['A','B','C'];
   const optsEl = document.getElementById('q-opts');
   optsEl.innerHTML = '';
-  q.opts.forEach((opt,i) => {
+  q.options.forEach((opt,i) => {
     const btn = document.createElement('button');
     btn.className = 'opt-btn';
-    btn.innerHTML = '<span class="opt-badge">' + labels[i] + '</span><span class="opt-text">' + opt + '</span>';
+    btn.innerHTML = '<span class="opt-badge">' + labels[i] + '</span><span class="opt-text">' + opt.text + '</span>';
     btn.onclick = () => selectOpt(i, btn);
     optsEl.appendChild(btn);
   });
@@ -289,7 +309,7 @@ function renderQuestion() {
 function selectOpt(idx, btn) {
   document.querySelectorAll('.opt-btn').forEach(b => b.classList.add('disabled'));
   btn.classList.add('selected');
-  const s = questions[current].scores[idx];
+  const s = questions[current].options[idx].score;
   scores[0]+=s[0]; scores[1]+=s[1]; scores[2]+=s[2];
   setTimeout(() => { current++; current < questions.length ? renderQuestion() : showResult(); }, 420);
 }
@@ -298,10 +318,9 @@ function selectOpt(idx, btn) {
 function getResult() {
   const max = Math.max(...scores);
   const maxIdx = scores.indexOf(max);
-  const tmp = [...scores]; tmp[maxIdx] = -1;
-  const secondIdx = tmp.indexOf(Math.max(...tmp));
-  const dims = ['暴躁','诺化','废柴'];
-  return personalities[dims[maxIdx]+'_'+dims[secondIdx]] || personalities['废柴_废柴'];
+  const group = results.filter(r => r.scoreType === maxIdx);
+  const pick = (scores[0]*7 + scores[1]*11 + scores[2]*13) % group.length;
+  return group[pick] || group[0];
 }
 
 function drawRadar(sc) {
@@ -332,14 +351,17 @@ function drawRadar(sc) {
 function showResult() {
   const p = getResult();
   currentResult = p;
-  document.getElementById('res-type').textContent = p.type;
-  document.getElementById('persona-img').innerHTML = svgs[p.name] || svgs['肌肉失忆者'];
-  document.getElementById('res-name').textContent = p.name;
+  const svgKey = svgKeyMap[p.type] || '肌肉失忆者';
+  document.getElementById('persona-img').innerHTML = svgs[svgKey] || svgs['肌肉失忆者'];
+  document.getElementById('res-nuo-level').textContent = p.nuohuaLevel;
+  document.getElementById('res-name').textContent = p.type;
   document.getElementById('res-quote').textContent = '「' + p.quote + '」';
   document.getElementById('res-desc').textContent = p.desc;
-  document.getElementById('share-main').innerHTML = '我测出来是「常熟阿诺之<strong>【'+p.name+'】</strong>」';
+  const tagsEl = document.getElementById('res-tags');
+  tagsEl.innerHTML = p.tag.map(t => '<span class="result-tag">' + t + '</span>').join('');
+  document.getElementById('share-main').innerHTML = '我测出来是「常熟阿诺之<strong>【' + p.type + '】</strong>」';
   document.getElementById('share-quote-text').textContent = '"' + p.quote + '"';
-  document.getElementById('copy-btn').textContent = '复制分享文案';
+  document.getElementById('copy-btn').textContent = '分享测试结果';
   drawRadar(scores);
   showPage('result');
   const maxScore = Math.max(...scores,1);
@@ -354,7 +376,7 @@ function showResult() {
 function shareResult() {
   const p = currentResult || getResult();
   const url = window.location.href.split('#')[0];
-  const text = '我测出来是「常熟阿诺之【' + p.name + '】」\n"' + p.quote + '"\n不服来辩！细狗！\n\n来测测你的阿诺浓度👇';
+  const text = '我测出来是「常熟阿诺之【' + p.type + '】」\n"' + p.quote + '"\n不服来辩！细狗！\n\n来测测你的阿诺浓度👇';
   const btn = document.getElementById('copy-btn');
   if (navigator.share) {
     navigator.share({ title: '来测测你的阿诺浓度', text: text, url: url })
