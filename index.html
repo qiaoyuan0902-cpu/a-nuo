@@ -170,7 +170,7 @@
       <p class="share-slogan">不服来辩！细狗！</p>
     </div>
     <div class="btn-group">
-      <button class="btn btn-red" id="copy-btn" onclick="copyShare()">复制分享文案</button>
+      <button class="btn btn-red" id="copy-btn" onclick="shareResult()">分享测试结果</button>
       <button class="btn" onclick="restartQuiz()">再测一次</button>
     </div>
   </section>
@@ -351,14 +351,22 @@ function showResult() {
   }, 350);
 }
 
-function copyShare() {
+function shareResult() {
   const p = currentResult || getResult();
-  const text = '我测出来是「常熟阿诺之【'+p.name+'】」\n"'+p.quote+'"\n不服来辩！细狗！\n\n测测你是哪种常熟阿诺？';
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.getElementById('copy-btn');
-    btn.textContent = '✓ 已复制！';
-    setTimeout(() => { btn.textContent = '复制分享文案'; }, 2200);
-  }).catch(() => alert(text));
+  const url = window.location.href.split('#')[0];
+  const text = '我测出来是「常熟阿诺之【' + p.name + '】」\n"' + p.quote + '"\n不服来辩！细狗！\n\n来测测你的阿诺浓度👇';
+  const btn = document.getElementById('copy-btn');
+  if (navigator.share) {
+    navigator.share({ title: '来测测你的阿诺浓度', text: text, url: url })
+      .catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text + '\n' + url).then(() => {
+      btn.textContent = '✓ 已复制！';
+      setTimeout(() => { btn.textContent = '分享测试结果'; }, 2200);
+    }).catch(() => {
+      prompt('复制以下内容发送给好友：', text + '\n' + url);
+    });
+  }
 }
 
 function restartQuiz() { startQuiz(); }
